@@ -2,9 +2,9 @@ import { Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export class PaymentPage extends BasePage {
-  // Phone number display on summary page
   readonly phoneNumberDisplay: string = [
     '[data-testid="phone-number"]',
+    '[data-testid*="phone"]',
     '[class*="phone"]',
     'td:has-text("081")',
     'span:has-text("081")',
@@ -13,9 +13,9 @@ export class PaymentPage extends BasePage {
     '.mobile',
   ].join(', ');
 
-  // Amount display
   readonly amountDisplay: string = [
     '[data-testid="amount"]',
+    '[data-testid*="amount"]',
     '[class*="amount"]',
     '.amount',
     'td:has-text("฿")',
@@ -24,7 +24,6 @@ export class PaymentPage extends BasePage {
     '[class*="total"]',
   ].join(', ');
 
-  // Total / grand total
   readonly totalDisplay: string = [
     '[data-testid="total"]',
     '.total',
@@ -33,7 +32,6 @@ export class PaymentPage extends BasePage {
     'td:last-child',
   ].join(', ');
 
-  // Fee display
   readonly feeDisplay: string = [
     '[data-testid="fee"]',
     '.fee',
@@ -43,7 +41,6 @@ export class PaymentPage extends BasePage {
     'span:has-text("ค่าธรรมเนียม")',
   ].join(', ');
 
-  // Confirm / pay button
   readonly confirmButton: string = [
     'button:has-text("ยืนยัน")',
     'button:has-text("ชำระเงิน")',
@@ -54,7 +51,6 @@ export class PaymentPage extends BasePage {
     '[class*="pay"]',
   ].join(', ');
 
-  // Back button
   readonly backButton: string = [
     'button:has-text("ย้อนกลับ")',
     'button:has-text("กลับ")',
@@ -63,63 +59,59 @@ export class PaymentPage extends BasePage {
     '[class*="back"]',
   ].join(', ');
 
+  constructor(page: Page) {
+    super(page);
+  }
+
   async getPhoneNumber(): Promise<string> {
-    try {
-      await this.page.waitForSelector(this.phoneNumberDisplay, { timeout: 5000 });
-      return await this.getText(this.phoneNumberDisplay);
-    } catch {
-      // Fallback: search page text for phone pattern
-      const content = await this.page.textContent('body') || '';
-      const match = content.match(/0[689]\d{8}/);
-      return match ? match[0] : '';
+    const phone = this.page.locator(this.phoneNumberDisplay).first();
+    if (await phone.isVisible().catch(() => false)) {
+      return (await phone.textContent()) || '';
     }
+
+    const content = await this.page.textContent('body');
+    const match = content?.match(/0[689]\d{8}/);
+    return match ? match[0] : '';
   }
 
   async getAmount(): Promise<string> {
-    try {
-      await this.page.waitForSelector(this.amountDisplay, { timeout: 5000 });
-      return await this.getText(this.amountDisplay);
-    } catch {
-      return '';
+    const amount = this.page.locator(this.amountDisplay).first();
+    if (await amount.isVisible().catch(() => false)) {
+      return (await amount.textContent()) || '';
     }
+    return '';
   }
 
   async getTotal(): Promise<string> {
-    try {
-      await this.page.waitForSelector(this.totalDisplay, { timeout: 5000 });
-      return await this.getText(this.totalDisplay);
-    } catch {
-      return '';
+    const total = this.page.locator(this.totalDisplay).first();
+    if (await total.isVisible().catch(() => false)) {
+      return (await total.textContent()) || '';
     }
+    return '';
   }
 
   async getFee(): Promise<string> {
-    try {
-      await this.page.waitForSelector(this.feeDisplay, { timeout: 5000 });
-      return await this.getText(this.feeDisplay);
-    } catch {
-      return '';
+    const fee = this.page.locator(this.feeDisplay).first();
+    if (await fee.isVisible().catch(() => false)) {
+      return (await fee.textContent()) || '';
     }
+    return '';
   }
 
   async confirmPayment(): Promise<void> {
-    await this.waitForElement(this.confirmButton, 10000);
-    await this.click(this.confirmButton);
+    const btn = this.page.locator(this.confirmButton).first();
+    await btn.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+    await btn.click();
   }
 
   async goBack(): Promise<void> {
-    await this.waitForElement(this.backButton, 10000);
-    await this.click(this.backButton);
+    const btn = this.page.locator(this.backButton).first();
+    await btn.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+    await btn.click();
   }
 
   async isSummaryVisible(): Promise<boolean> {
-    try {
-      // Check if either phone or amount display is visible
-      const phoneVisible = await this.isVisible(this.phoneNumberDisplay);
-      const amountVisible = await this.isVisible(this.amountDisplay);
-      return phoneVisible || amountVisible;
-    } catch {
-      return false;
-    }
+    return (await this.page.locator(this.phoneNumberDisplay).first().isVisible().catch(() => false)) ||
+      (await this.page.locator(this.amountDisplay).first().isVisible().catch(() => false));
   }
 }
