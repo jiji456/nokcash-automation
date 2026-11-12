@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'https://xn--m3ca1athe9asc7b2b6iqe.com',
+    baseURL: 'https://ลอตเตอรี่พลัส.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     actionTimeout: 15000,
